@@ -27,7 +27,7 @@
 
 #define MAX_FILE_NAME_LEN 256
 #define MAX_READ_LEN 3072
-#define MAX_DATA_LEN 1000001	// original 256 * 4
+#define MAX_DATA_LEN 1024	// original 256 * 4
 
 #pragma warning(disable: 4996)
 
@@ -128,7 +128,7 @@ void drbg_lsh_test_drive()
 		fprintf(output_file, "\n\n");
 
 
-		drbg_lsh_digest(algtype, entropy, entropy_size, nonce, nonce_size, per_string, per_size, add_input, add_size, output_bits, reseed_cycle, drbg_result, output_file);
+		drbg_lsh_digest(algtype, entropy, entropy_size, nonce, nonce_size, per_string, per_size, add_input, add_size, output_bits, reseed_cycle, drbg_result);
 	}
 	else
 	{
