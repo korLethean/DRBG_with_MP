@@ -76,17 +76,12 @@ lsh_err drbg_derivation_func(struct DRBG_LSH_Context *ctx, const lsh_u8 *data, i
 	}
 	len_seed = ceil((double)Seed_Bit / (double)Block_Bit);
 
-	hash_data[0] = 1;	// counter
+	for(w = 5, r = 0; r < data_size ; r++)
+		hash_data[w++] = data[r];
 
 	for(int i = 0 ; i < len_seed ; i++)
 	{
-		w = 5;
-		if(!i) {
-			for(r = 0; r < data_size ; r++)
-				hash_data[w++] = data[r];
-		}
-		else
-			hash_data[0]++;
+		hash_data[0] = i + 1;
 
 		result = lsh_digest(ctx->setting.drbgtype, hash_data, (5 + data_size) * 8, hash_result[i]);
 	}
@@ -155,6 +150,8 @@ lsh_err drbg_lsh_inner_output_gen(struct DRBG_LSH_Context *ctx, lsh_u8 *input, l
 	for(int a = 0 ; a < STATE_MAX_SIZE ; a++)
 		hash_data[a] = input[a];
 
+	// can applied openmp
+//#pragma omp parallel for
 	for(int i = 0 ; i < (int) n ; i++)
 	{
 		operation_add(hash_data, STATE_MAX_SIZE, 0, i);
@@ -480,8 +477,8 @@ lsh_err drbg_lsh_digest(lsh_type algtype, lsh_u8 (*entropy)[64], int ent_size, l
 
 		printf("output%d = ", i + 1); // console output
 		for(int i = 0 ; i < output_bits / 8 ; i++)
-			printf("%02x", drbg[i]);	// console output
-		printf("\n");	// console output
+			printf("%02x", drbg[i]);
+		printf("\n");
 
 		if (result != LSH_SUCCESS)
 			return result;

@@ -57,10 +57,10 @@ void drbg_lsh_testvector_pr()
 
 	lsh_uint reseed_cycle = 1;
 
-	int entropy_size = 0;
-	int nonce_size = 0;
-	int per_size = 0;
-	int add_size = 0;
+	int entropy_size;
+	int nonce_size;
+	int per_size;
+	int add_size;
 	int count;
 
 	int r, w;
@@ -70,7 +70,7 @@ void drbg_lsh_testvector_pr()
 
 	int num = 0;
 
-#pragma omp parallel for private(input_file_name, output_file_name, algtype, prediction_resistance, output_bits, entropy_size, nonce_size, per_size, add_size, count, num)
+#pragma omp parallel for private(input_file_name, output_file_name, count, num, algtype, output_bits, entropy_size, nonce_size, add_size, per_size)
 	for(int index = 0 ; index < MAX_LOOP_COUNT ; index++)
 	{
 		num = 0;
@@ -237,7 +237,7 @@ int main()
 	time_t start_time = 0, end_time = 0;
 	double excute_time;
 	double total_time = 0;
-	int loop_count = 1000;
+	int loop_count = 1;
 
 	for(int i = 0 ; i < loop_count ; i++)
 	{
