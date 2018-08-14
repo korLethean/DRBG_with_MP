@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <time.h>
 #include <omp.h>
 #include "include/drbg.h"
@@ -31,9 +32,12 @@
 #define MAX_READ_LEN 1024
 #define MAX_DATA_LEN 1024	// original 256 * 4
 
+#define MP_ON true
+#define MP_OFF false
+
 #pragma warning(disable: 4996)
 
-void drbg_lsh_testvector_pr()
+void drbg_lsh_testvector_pr(bool mp_on)
 {
 	const int MAX_LOOP_COUNT = 6;
 
@@ -71,7 +75,7 @@ void drbg_lsh_testvector_pr()
 	int num = 0;
 
 	omp_set_num_threads(MAX_LOOP_COUNT);
-#pragma omp parallel for private(input_file_name, output_file_name, input_file, output_file, count, num, algtype, output_bits, entropy, entropy_pr1, entropy_pr2, entropy_size, nonce, nonce_size, add_input1, add_input2, add_size, per_string, per_size, drbg_result, r, w, str_to_int, read_line)
+#pragma omp parallel for private(input_file_name, output_file_name, input_file, output_file, count, num, algtype, output_bits, entropy, entropy_pr1, entropy_pr2, entropy_size, nonce, nonce_size, add_input1, add_input2, add_size, per_string, per_size, drbg_result, r, w, str_to_int, read_line) if(mp_on)
 	for(int index = 0 ; index < MAX_LOOP_COUNT ; index++)
 	{
 		num = 0;
@@ -238,13 +242,15 @@ int main()
 	time_t start_time = 0, end_time = 0;
 	double excute_time;
 	double total_time = 0;
-	int loop_count = 2000;
+	int loop_count = 1000;
 
 	for(int i = 0 ; i < loop_count ; i++)
 	{
 		start_time = clock();
 
-		drbg_lsh_testvector_pr();
+		// MP_ON: multiprocessing ON
+		// MP_OFF: multiprocessing OFF
+		drbg_lsh_testvector_pr(MP_ON);
 
 		end_time = clock();
 		excute_time = (double)(end_time - start_time);
