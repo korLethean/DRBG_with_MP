@@ -37,20 +37,20 @@ void drbg_lsh_testvector_pr()
 {
 	const int MAX_LOOP_COUNT = 6;
 
-	FILE *input_file[MAX_LOOP_COUNT], *output_file[MAX_LOOP_COUNT];
+	FILE *input_file, *output_file;
 	char input_file_name[MAX_FILE_NAME_LEN], output_file_name[MAX_FILE_NAME_LEN];
 	lsh_u8 drbg_result[128];
 
-	lsh_u8 read_line[MAX_LOOP_COUNT][MAX_DATA_LEN];
+	lsh_u8 read_line[MAX_DATA_LEN];
 
 	lsh_type algtype;
-	lsh_u8 entropy[MAX_LOOP_COUNT][256];
-	lsh_u8 entropy_pr1[MAX_LOOP_COUNT][256];
-	lsh_u8 entropy_pr2[MAX_LOOP_COUNT][256];
-	lsh_u8 nonce[MAX_LOOP_COUNT][256];
-	lsh_u8 per_string[MAX_LOOP_COUNT][256];
-	lsh_u8 add_input1[MAX_LOOP_COUNT][256];
-	lsh_u8 add_input2[MAX_LOOP_COUNT][256];
+	lsh_u8 entropy[256];
+	lsh_u8 entropy_pr1[256];
+	lsh_u8 entropy_pr2[256];
+	lsh_u8 nonce[256];
+	lsh_u8 per_string[256];
+	lsh_u8 add_input1[256];
+	lsh_u8 add_input2[256];
 
 	bool prediction_resistance;
 	lsh_uint output_bits;
@@ -64,160 +64,160 @@ void drbg_lsh_testvector_pr()
 	int count;
 
 	int r, w;
-	lsh_u8 *str_to_int[MAX_LOOP_COUNT];
+	lsh_u8 *str_to_int;
 
 	unsigned char *std_name[6] = {"LSH-256_224", "LSH-256_256", "LSH-512_224", "LSH-512_256", "LSH-512_384", "LSH-512_512"};
 
 	int num = 0;
 
 	omp_set_num_threads(MAX_LOOP_COUNT);
-#pragma omp parallel for private(input_file_name, output_file_name, count, num, algtype, output_bits, entropy_size, nonce_size, add_size, per_size, drbg_result, r, w)
+#pragma omp parallel for private(input_file_name, output_file_name, input_file, output_file, count, num, algtype, output_bits, entropy, entropy_pr1, entropy_pr2, entropy_size, nonce, nonce_size, add_input1, add_input2, add_size, per_string, per_size, drbg_result, r, w, str_to_int, read_line)
 	for(int index = 0 ; index < MAX_LOOP_COUNT ; index++)
 	{
 		num = 0;
 		sprintf(input_file_name, "DRBG_testvector_pr/HASH_DRBG(%s(-)(PR)).txt", std_name[index]);
 		sprintf(output_file_name, "DRBG_testvector_pr/HASH_DRBG(%s(-)(PR))_rsp.txt", std_name[index]);
 
-		input_file[index] = fopen(input_file_name, "r");
-		output_file[index] = fopen(output_file_name, "w");
+		input_file = fopen(input_file_name, "r");
+		output_file = fopen(output_file_name, "w");
 
-		if(input_file[index] != NULL)
+		if(input_file != NULL)
 		{
 			printf("test data from: %s \n", input_file_name);
 
-			while(!feof(input_file[index]))
+			while(!feof(input_file))
 			{
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// read algtype
-				read_line[index][strlen(read_line[index]) - 1] = '\0';
+				fgets(read_line, MAX_READ_LEN, input_file);	// read algtype
+				read_line[strlen(read_line) - 1] = '\0';
 
-				if(!strcmp(read_line[index], "[LSH-256_224]"))
+				if(!strcmp(read_line, "[LSH-256_224]"))
 				{
 					output_bits = 448;
 					algtype = LSH_TYPE_256_224;
 				}
-				else if(!strcmp(read_line[index], "[LSH-256_256]"))
+				else if(!strcmp(read_line, "[LSH-256_256]"))
 				{
 					output_bits = 512;
 					algtype = LSH_TYPE_256_256;
 				}
-				else if(!strcmp(read_line[index], "[LSH-512_224]"))
+				else if(!strcmp(read_line, "[LSH-512_224]"))
 				{
 					output_bits = 448;
 					algtype = LSH_TYPE_512_224;
 				}
-				else if(!strcmp(read_line[index], "[LSH-512_256]"))
+				else if(!strcmp(read_line, "[LSH-512_256]"))
 				{
 					output_bits = 512;
 					algtype = LSH_TYPE_512_256;
 				}
-				else if(!strcmp(read_line[index], "[LSH-512_384]"))
+				else if(!strcmp(read_line, "[LSH-512_384]"))
 				{
 					output_bits = 768;
 					algtype = LSH_TYPE_512_384;
 				}
-				else if(!strcmp(read_line[index], "[LSH-512_512]"))
+				else if(!strcmp(read_line, "[LSH-512_512]"))
 				{
 					output_bits = 1024;
 					algtype = LSH_TYPE_512_512;
 				}
 				else
 				{
-					printf("%s is unknown algorithm type \n", read_line[index]);
+					printf("%s is unknown algorithm type \n", read_line);
 					goto forced_exit;
 				}
 
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// skip line
+				fgets(read_line, MAX_READ_LEN, input_file);	// skip line
 				prediction_resistance = true;
 
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// read entropy length
-				str_to_int[index] = &read_line[index][19];
-				entropy_size = atoi(str_to_int[index]);
+				fgets(read_line, MAX_READ_LEN, input_file);	// read entropy length
+				str_to_int = &read_line[19];
+				entropy_size = atoi(str_to_int);
 
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// read nonce length
-				str_to_int[index] = &read_line[index][11];
-				nonce_size = atoi(str_to_int[index]);
+				fgets(read_line, MAX_READ_LEN, input_file);	// read nonce length
+				str_to_int = &read_line[11];
+				nonce_size = atoi(str_to_int);
 
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// read persnalization length
-				str_to_int[index] = &read_line[index][27];
-				per_size = atoi(str_to_int[index]);
+				fgets(read_line, MAX_READ_LEN, input_file);	// read persnalization length
+				str_to_int = &read_line[27];
+				per_size = atoi(str_to_int);
 
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]); // read additional length
-				str_to_int[index] = &read_line[index][21];
-				add_size = atoi(str_to_int[index]);
+				fgets(read_line, MAX_READ_LEN, input_file); // read additional length
+				str_to_int = &read_line[21];
+				add_size = atoi(str_to_int);
 
-				fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// skip line
+				fgets(read_line, MAX_READ_LEN, input_file);	// skip line
 
 				while(count != 14)
 				{
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get count
-					str_to_int[index] = &read_line[index][8];
-					count = atoi(str_to_int[index]);
+					fgets(read_line, MAX_READ_LEN, input_file);	// get count
+					str_to_int = &read_line[8];
+					count = atoi(str_to_int);
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get entropy
-					for(r = 15, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+					fgets(read_line, MAX_READ_LEN, input_file);	// get entropy
+					for(r = 15, w = 0 ; r < strlen(read_line) ; r += 2)
 					{
-						lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-						entropy[index][w++] = strtol(str_to_hex, NULL, 16);
+						lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+						entropy[w++] = strtol(str_to_hex, NULL, 16);
 					}
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get nocne
-					for(r = 8, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+					fgets(read_line, MAX_READ_LEN, input_file);	// get nocne
+					for(r = 8, w = 0 ; r < strlen(read_line) ; r += 2)
 					{
-						lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-						nonce[index][w++] = strtol(str_to_hex, NULL, 16);
+						lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+						nonce[w++] = strtol(str_to_hex, NULL, 16);
 					}
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]); // get personalization string
+					fgets(read_line, MAX_READ_LEN, input_file); // get personalization string
 					if(per_size)
 					{
-						for(r = 24, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+						for(r = 24, w = 0 ; r < strlen(read_line) ; r += 2)
 						{
-							lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-							per_string[index][w++] = strtol(str_to_hex, NULL, 16);
+							lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+							per_string[w++] = strtol(str_to_hex, NULL, 16);
 						}
 					}
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get additional input1
+					fgets(read_line, MAX_READ_LEN, input_file);	// get additional input1
 					if(add_size)
 					{
-						for(r = 18, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+						for(r = 18, w = 0 ; r < strlen(read_line) ; r += 2)
 						{
-							lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-							add_input1[index][w++] = strtol(str_to_hex, NULL, 16);
+							lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+							add_input1[w++] = strtol(str_to_hex, NULL, 16);
 						}
 					}
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get entropy pr1
-					for(r = 17, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+					fgets(read_line, MAX_READ_LEN, input_file);	// get entropy pr1
+					for(r = 17, w = 0 ; r < strlen(read_line) ; r += 2)
 					{
-						lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-						entropy_pr1[index][w++] = strtol(str_to_hex, NULL, 16);
+						lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+						entropy_pr1[w++] = strtol(str_to_hex, NULL, 16);
 					}
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get additional input2
+					fgets(read_line, MAX_READ_LEN, input_file);	// get additional input2
 					if(add_size)
 					{
-						for(r = 18, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+						for(r = 18, w = 0 ; r < strlen(read_line) ; r += 2)
 						{
-							lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-							add_input2[index][w++] = strtol(str_to_hex, NULL, 16);
+							lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+							add_input2[w++] = strtol(str_to_hex, NULL, 16);
 						}
 					}
 
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// get entropy pr2
-					for(r = 17, w = 0 ; r < strlen(read_line[index]) ; r += 2)
+					fgets(read_line, MAX_READ_LEN, input_file);	// get entropy pr2
+					for(r = 17, w = 0 ; r < strlen(read_line) ; r += 2)
 					{
-						lsh_u8 str_to_hex[3] = {read_line[index][r], read_line[index][r+1], '\0'};
-						entropy_pr2[index][w++] = strtol(str_to_hex, NULL, 16);
+						lsh_u8 str_to_hex[3] = {read_line[r], read_line[r+1], '\0'};
+						entropy_pr2[w++] = strtol(str_to_hex, NULL, 16);
 					}
-					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// skip line
+					fgets(read_line, MAX_READ_LEN, input_file);	// skip line
 
-					drbg_lsh_testvector_pr_digest(algtype, prediction_resistance, entropy[index], entropy_pr1[index], entropy_pr2[index], entropy_size, nonce[index], nonce_size, per_string[index], per_size, add_input1[index], add_input2[index], add_size, output_bits, reseed_cycle, drbg_result);
+					drbg_lsh_testvector_pr_digest(algtype, prediction_resistance, entropy, entropy_pr1, entropy_pr2, entropy_size, nonce, nonce_size, per_string, per_size, add_input1, add_input2, add_size, output_bits, reseed_cycle, drbg_result);
 
-					fprintf(output_file[index], "output %d = ", num++);
+					fprintf(output_file, "output %d = ", num++);
 					for(int i = 0 ; i < output_bits / 8 ; i++)
-						fprintf(output_file[index], "%02x", drbg_result[i]);
-					fprintf(output_file[index], "\n\n");
+						fprintf(output_file, "%02x", drbg_result[i]);
+					fprintf(output_file, "\n\n");
 
 				}
 				count = 0;
@@ -226,8 +226,8 @@ void drbg_lsh_testvector_pr()
 		else
 			printf("file does not exist \n");
 	forced_exit:
-		fclose(input_file[index]);
-		fclose(output_file[index]);
+		fclose(input_file);
+		fclose(output_file);
 	}
 
 	printf("DRBG test finished \n");
@@ -238,7 +238,7 @@ int main()
 	time_t start_time = 0, end_time = 0;
 	double excute_time;
 	double total_time = 0;
-	int loop_count = 1;
+	int loop_count = 2000;
 
 	for(int i = 0 ; i < loop_count ; i++)
 	{
