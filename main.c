@@ -39,7 +39,7 @@ void drbg_lsh_testvector_pr()
 
 	FILE *input_file[MAX_LOOP_COUNT], *output_file[MAX_LOOP_COUNT];
 	char input_file_name[MAX_FILE_NAME_LEN], output_file_name[MAX_FILE_NAME_LEN];
-	lsh_u8 drbg_result[MAX_LOOP_COUNT][128];
+	lsh_u8 drbg_result[128];
 
 	lsh_u8 read_line[MAX_LOOP_COUNT][MAX_DATA_LEN];
 
@@ -70,7 +70,8 @@ void drbg_lsh_testvector_pr()
 
 	int num = 0;
 
-#pragma omp parallel for private(input_file_name, output_file_name, count, num, algtype, output_bits, entropy_size, nonce_size, add_size, per_size)
+	omp_set_num_threads(MAX_LOOP_COUNT);
+#pragma omp parallel for private(input_file_name, output_file_name, count, num, algtype, output_bits, entropy_size, nonce_size, add_size, per_size, drbg_result, r, w)
 	for(int index = 0 ; index < MAX_LOOP_COUNT ; index++)
 	{
 		num = 0;
@@ -211,13 +212,13 @@ void drbg_lsh_testvector_pr()
 					}
 					fgets(read_line[index], MAX_READ_LEN, input_file[index]);	// skip line
 
-					/// 여기 작업해야함 ///
-					drbg_lsh_testvector_pr_digest(algtype, prediction_resistance, entropy[index], entropy_pr1[index], entropy_pr2[index], entropy_size, nonce[index], nonce_size, per_string[index], per_size, add_input1[index], add_input2[index], add_size, output_bits, reseed_cycle, drbg_result[index]);
+					drbg_lsh_testvector_pr_digest(algtype, prediction_resistance, entropy[index], entropy_pr1[index], entropy_pr2[index], entropy_size, nonce[index], nonce_size, per_string[index], per_size, add_input1[index], add_input2[index], add_size, output_bits, reseed_cycle, drbg_result);
 
 					fprintf(output_file[index], "output %d = ", num++);
 					for(int i = 0 ; i < output_bits / 8 ; i++)
-						fprintf(output_file[index], "%02x", drbg_result[index][i]);
+						fprintf(output_file[index], "%02x", drbg_result[i]);
 					fprintf(output_file[index], "\n\n");
+
 				}
 				count = 0;
 			}
