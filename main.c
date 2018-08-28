@@ -243,7 +243,7 @@ int main()
 	time_t start_time = 0, end_time = 0;
 	double excute_time;
 	double total_time = 0;
-	int loop_count = 1;
+	int loop_count = 1000;
 	int is_lsh = 1;
 
 	if(is_lsh)
@@ -257,10 +257,11 @@ int main()
 			end_time = clock();
 			excute_time = (double)(end_time - start_time);
 			total_time += excute_time;
+			printf("Time spent: %.f milliseconds \n", excute_time);
+
 		}
 	}
 
-	printf("Time spent: %.f milliseconds \n", excute_time);
 	printf("Total Time spend: %.f milliseconds \n", total_time);
 	printf("Average Time spent of %d loops: %.f milliseconds \n", loop_count, total_time / loop_count);
 
