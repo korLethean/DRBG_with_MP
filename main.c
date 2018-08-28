@@ -243,8 +243,8 @@ int main()
 	time_t start_time = 0, end_time = 0;
 	double excute_time;
 	double total_time = 0;
-	int loop_count = 1000;
-	int is_lsh = 0;
+	int loop_count = 1;
+	int is_lsh = 1;
 
 	if(is_lsh)
 	{

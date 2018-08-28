@@ -76,7 +76,6 @@ lsh_err drbg_derivation_func_lsh(struct DRBG_LSH_Context *ctx, const lsh_u8 *dat
 	}
 	len_seed = ceil((double)Seed_Bit / (double)Block_Bit);
 
-	printf("%d \n", data_size);
 	for(w = 5, r = 0; r < data_size ; r++)
 		hash_data[w++] = data[r];
 
@@ -112,7 +111,7 @@ lsh_err drbg_lsh_inner_output_gen(struct DRBG_LSH_Context *ctx, lsh_u8 *input, l
 	double n;
 	int loop_count;
 
-	lsh_u8 hash_data[111];
+	lsh_u8 hash_data[8][111];
 	lsh_u8 hash_result[12][LSH512_HASH_VAL_MAX_BYTE_LEN];
 
 	int r, w = 0, counter = 0;
@@ -121,6 +120,8 @@ lsh_err drbg_lsh_inner_output_gen(struct DRBG_LSH_Context *ctx, lsh_u8 *input, l
 	int output_index = output_bits / 8;
 
 	int STATE_MAX_SIZE;
+
+	int index;
 
 	if (input == NULL)
 		return LSH_ERR_NULL_PTR;
@@ -148,16 +149,20 @@ lsh_err drbg_lsh_inner_output_gen(struct DRBG_LSH_Context *ctx, lsh_u8 *input, l
 	}
 	n = ceil((double) output_bits / (double) Block_Bit);
 
-	for(int a = 0 ; a < STATE_MAX_SIZE ; a++)
-		hash_data[a] = input[a];
+	for(int i = 0 ; i < n ; i++)
+	{
+		for(int a = 0 ; a < STATE_MAX_SIZE ; a++)
+			hash_data[i][a] = input[a];
+	}
+
 
 	// can applied openmp
 #pragma omp parallel for
 	for(int i = 0 ; i < (int) n ; i++)
 	{
-		operation_add_lsh(hash_data, STATE_MAX_SIZE, 0, i);
+		operation_add_lsh(hash_data[i], STATE_MAX_SIZE, 0, i);
 
-		result = lsh_digest(ctx->setting.drbgtype, hash_data, STATE_MAX_SIZE * 8, hash_result[i]);
+		result = lsh_digest(ctx->setting.drbgtype, hash_data[i], STATE_MAX_SIZE * 8, hash_result[i]);
 	}
 
 	w = 0;
