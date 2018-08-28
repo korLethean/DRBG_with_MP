@@ -32,12 +32,9 @@
 #define MAX_READ_LEN 1024
 #define MAX_DATA_LEN 1024	// original 256 * 4
 
-#define MP_ON true
-#define MP_OFF false
-
 #pragma warning(disable: 4996)
 
-void drbg_lsh_testvector_pr(bool mp_on)
+void drbg_lsh_testvector_pr()
 {
 	const int MAX_LOOP_COUNT = 6;
 
@@ -75,12 +72,14 @@ void drbg_lsh_testvector_pr(bool mp_on)
 	int num = 0;
 
 	omp_set_num_threads(MAX_LOOP_COUNT);
-#pragma omp parallel for private(input_file_name, output_file_name, input_file, output_file, count, num, algtype, output_bits, entropy, entropy_pr1, entropy_pr2, entropy_size, nonce, nonce_size, add_input1, add_input2, add_size, per_string, per_size, drbg_result, r, w, str_to_int, read_line) if(mp_on)
+
+	// can applied open MP
+//#pragma omp parallel for private(input_file_name, output_file_name, input_file, output_file, count, num, algtype, output_bits, entropy, entropy_pr1, entropy_pr2, entropy_size, nonce, nonce_size, add_input1, add_input2, add_size, per_string, per_size, drbg_result, r, w, str_to_int, read_line)
 	for(int index = 0 ; index < MAX_LOOP_COUNT ; index++)
 	{
 		num = 0;
-		sprintf(input_file_name, "DRBG_testvector_pr/HASH_DRBG(%s(-)(PR)).txt", std_name[index]);
-		sprintf(output_file_name, "DRBG_testvector_pr/HASH_DRBG(%s(-)(PR))_rsp.txt", std_name[index]);
+		sprintf(input_file_name, "DRBG_testvector_lsh/HASH_DRBG(%s(-)(PR)).txt", std_name[index]);
+		sprintf(output_file_name, "DRBG_testvector_lsh/HASH_DRBG(%s(-)(PR))_rsp.txt", std_name[index]);
 
 		input_file = fopen(input_file_name, "r");
 		output_file = fopen(output_file_name, "w");
@@ -129,6 +128,8 @@ void drbg_lsh_testvector_pr(bool mp_on)
 					printf("%s is unknown algorithm type \n", read_line);
 					goto forced_exit;
 				}
+
+				output_bits *= 1;		// adjust output bits size
 
 				fgets(read_line, MAX_READ_LEN, input_file);	// skip line
 				prediction_resistance = true;
@@ -243,21 +244,23 @@ int main()
 	double excute_time;
 	double total_time = 0;
 	int loop_count = 1000;
+	int is_lsh = 0;
 
-	for(int i = 0 ; i < loop_count ; i++)
+	if(is_lsh)
 	{
-		start_time = clock();
+		for(int i = 0 ; i < loop_count ; i++)
+		{
+			start_time = clock();
 
-		// MP_ON: multiprocessing ON
-		// MP_OFF: multiprocessing OFF
-		drbg_lsh_testvector_pr(MP_ON);
+			drbg_lsh_testvector_pr();
 
-		end_time = clock();
-		excute_time = (double)(end_time - start_time);
-		total_time += excute_time;
-
-		printf("Time spent: %.f milliseconds \n", excute_time);
+			end_time = clock();
+			excute_time = (double)(end_time - start_time);
+			total_time += excute_time;
+		}
 	}
+
+	printf("Time spent: %.f milliseconds \n", excute_time);
 	printf("Total Time spend: %.f milliseconds \n", total_time);
 	printf("Average Time spent of %d loops: %.f milliseconds \n", loop_count, total_time / loop_count);
 
